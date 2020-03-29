@@ -1,0 +1,9 @@
+body {
+    width: 300px;
+    align-content: center;
+}
+
+p {
+    border: 1px solid green;
+    align-content: center;
+}
