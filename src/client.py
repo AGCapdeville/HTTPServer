@@ -33,49 +33,67 @@ def client(host,port):
     sock.connect((host,port))
     logging.info('Connect to server: ' + host + ' on port: ' + str(port))
 
+    # import cgi
+    # form = cgi.FieldStorage()
+    # name = form.getvalue('name')
+    # course = form.getvalue('course')
 
-    while True:
-        print('Waiting for turn...\n')
-        msg = recv_until(sock, b'\n').decode('utf-8')
+    
 
-        if msg.startswith('BOR'):
-            board = msg[3:len(msg)]
-            print('\n'+board)
-            sock.sendall( ('RCVD\n').encode() )
+
+    logging.info("name =" + name + "\n course =" + course)
+
+    sock.sendall( ('GET /meme HTTP/1.1 \r\n').encode() )
+
+    # wait for meme now..
+    # or
+    # wait for post now.. 
+    # how to use with browser?
+
+    # while True:
+    #     print('Waiting for turn...\n')
+    #     msg = recv_until(sock, b'\n').decode('utf-8')
+
+    #     if msg.startswith('BOR'):
+    #         board = msg[3:len(msg)]
+    #         print('\n'+board)
+    #         sock.sendall( ('RCVD\n').encode() )
         
-        if msg.startswith('TRN'):
-            playerIcon = msg[3]
-            aMoves = msg[4:len(msg)]
-            logging.info('Available Moves: ')
-            logging.info('Positions: ' + aMoves)
-            logging.info('Your Turn Player: ' + playerIcon)
+    #     if msg.startswith('TRN'):
+    #         playerIcon = msg[3]
+    #         aMoves = msg[4:len(msg)]
+    #         logging.info('Available Moves: ')
+    #         logging.info('Positions: ' + aMoves)
+    #         logging.info('Your Turn Player: ' + playerIcon)
             
-            while True:
-                move = input("Pos: ")
-                if move in msg:
-                    break
-                else:
-                    logging.info('INVALID MOVE')
-            sock.sendall( (move + '\n' ).encode())
+    #         while True:
+    #             move = input("Pos: ")
+    #             if move in msg:
+    #                 break
+    #             else:
+    #                 logging.info('INVALID MOVE')
+    #         sock.sendall( (move + '\n' ).encode())
 
 
-        if msg.startswith('TIE'):
-            logging.info('The game is a tie')
+    #     if msg.startswith('TIE'):
+    #         logging.info('The game is a tie')
         
-        if msg.startswith('SCR'):
-            logging.info('Player '+ msg[3] +' WON')
-            break
+    #     if msg.startswith('SCR'):
+    #         logging.info('Player '+ msg[3] +' WON')
+    #         break
     
     print('exiting...')
     sock.close()
 
 
 
+
 if __name__ == '__main__':
     port = 9001
+    host = 'localhost'
+    # parser = argparse.ArgumentParser(description='Tic Tac Oh No Client (TCP edition)')
+    # parser.add_argument('host', help='IP address of the server.')
+    # args = parser.parse_args()
+    # client(args.host, port)
 
-    parser = argparse.ArgumentParser(description='Tic Tac Oh No Client (TCP edition)')
-    parser.add_argument('host', help='IP address of the server.')
-    args = parser.parse_args()
-
-    client(args.host, port)
+    client(host, port)
