@@ -47,48 +47,21 @@ class HttpRequest():
         print("\n\nJSON: \n",self.rjson)
 
     def process_request(self):
-        response = b""
 
         print("method:", self.rjson["request-line"]["method"])
         URI = "WWW" + self.rjson["request-line"]["URI"]
         print("URI:", URI)
 
-        try:
-            with open(URI, "r") as f:
-                print(f.readlines())
-        except IOError:
-            print("FILE NOT FOUND")
-        
-        # if (os.path.exists(".."+self.rjson["request-line"]["URI"])):
-        #     response = b"HTTP/1.1 200 \r\nServer: cihttpd\r\n\r\n<html><body><h1>200 A-OK! File Found</h1><p>\n\t\t-The Garbage Tier Server</p></body></html>"
-
-
-        # try:
-        #     with open('testPath.txt') as f:
-        #         print(f.readlines())
-        #         # Do something with the file
-        # except IOError:
-        #     print("File not accessible")
-
-
-        # try:
-        #     f = open("/"+self.rjson["request-line"]["URI"])
-        #     print(f)
-        #     response = b"HTTP/1.1 200 OK\r\n Server: cihttp \r\n\r\n"+f
-        # except IOError:
-        #     print("ERROR 404")
-        #     response = b"HTTP/1.1 404 \r\nServer: cihttpd\r\n\r\n<html><body><h1>404 UwU</h1><p>\n\t\t-The Garbage Tier Server</p></body></html>"
-        # finally:
-        #     f.close()
-
-        # else:
         response = b"HTTP/1.1 404 \r\nServer: cihttpd\r\n\r\n<html><body><h1>404 NOT-A-OK! Error Not Found</h1><p>\n\t\t-The Garbage Tier Server</p></body></html>"
 
-                
-        #     return response
-        # else:
-        #     return(b"HTTP/1.1 500 Not a real fake server (yet).\r\nServer: cihttpd\r\n\r\n<html><body><h1>500 UWU Internal Server Error</h1><p>Garbage Tier Server.</p></body></html>")
-        
+        try:
+            with open(URI, "r") as f:
+                # print(f.read()) 
+                r = "HTTP/1.1 200 \r\nServer: cihttpd\r\n\r\n" + f.read()
+                response = bytes(r, 'utf-8')
+        except IOError:
+            print("FILE NOT FOUND")
+             
         return response
 
 
