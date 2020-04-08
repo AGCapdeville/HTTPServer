@@ -50,7 +50,7 @@ class HttpRequest():
         response = b""
 
         print("method:", self.rjson["request-line"]["method"])
-        URI = "PROJ02" + self.rjson["request-line"]["URI"]
+        URI = "WWW" + self.rjson["request-line"]["URI"]
         print("URI:", URI)
 
         try:
@@ -61,7 +61,6 @@ class HttpRequest():
         
         # if (os.path.exists(".."+self.rjson["request-line"]["URI"])):
         #     response = b"HTTP/1.1 200 \r\nServer: cihttpd\r\n\r\n<html><body><h1>200 A-OK! File Found</h1><p>\n\t\t-The Garbage Tier Server</p></body></html>"
-
 
 
         # try:
