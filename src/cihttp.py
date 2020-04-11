@@ -19,6 +19,7 @@ class HttpRequest():
 
     def parse_string(self):
         req = self.rstr.split("\r\n")
+        print(req)
         requestLine = req[0].split()
         req.pop(0)
         reqLine = {}
@@ -27,41 +28,66 @@ class HttpRequest():
         reqLine['version'] = requestLine[2]
         self.rjson['request-line'] = reqLine
 
-        headers = []
+        if reqLine["method"] == "POST":
+            body = req[-1]
+            self.rjson['body'] = body
+            # self.rjson['body-length'] = "size of body in bytes"
+            print("JSON:", self.rjson['body'])
+
+        headers = {}
+        length = 0
         for line in req:
-            head = {}
             start = ""
             for element in line:
-                start += element
-                
                 if element == ':' and start != "":
-                    end = line[len(start):len(line)]
-                    head[start] = end
-                    headers.append(head)
+                    if (start == "Content-Length"):
+                        num = line[len(start)+2:len(line)]
+                        length = int(num)
+
+                    end = line[len(start)+2:len(line)]
+                    headers[start] = end
                     break
-                
+                start += element
+        
+        headers["Content-Length"] = length
         self.rjson['headers'] = headers
+        print("+++++++++++++++++\rHEADERS:", self.rjson['headers'],"\r+++++++++++++++++\r")
 
 
     def display_request(self):
         print("\n\nJSON: \n",self.rjson)
 
     def process_request(self):
-
-        print("method:", self.rjson["request-line"]["method"])
+        method = self.rjson["request-line"]["method"]
+        print("method:", method)
         URI = "WWW" + self.rjson["request-line"]["URI"]
         print("URI:", URI)
 
-        response = b"HTTP/1.1 404 \r\nServer: cihttpd\r\n\r\n<html><body><h1>404 NOT-A-OK! Error Not Found</h1><p>\n\t\t-The Garbage Tier Server</p></body></html>"
+        # TODO: ADD ONTO THIS : 
+            # HTTP/1.1 404 Not Found
+            # Date: Sun, 18 Oct 2012 10:36:20 GMT
+            # Server: Apache/2.2.14 (Win32)
+            # Content-Length: 230
+            # Content-Type: text/html; charset=iso-8859-1
+            # Connection: Closed
+
+            # && LINK : https://www.tutorialspoint.com/http/http_message_examples.htm
+
+
+
+        response = b"HTTP/1.1 404 File not found\r\nServer: cihttpd\r\n\r\n<html><body><h1>404 File not found</h1><p>\n\t\t-The Garbage Tier Server</p></body></html>"
+
+        if method == "POST":
+            print( "\r--------------\rLENGTH:", self.rjson, "\r--------------\r" )
 
         try:
             with open(URI, "r") as f:
                 # print(f.read()) 
-                r = "HTTP/1.1 200 \r\nServer: cihttpd\r\n\r\n" + f.read()
+                r = "HTTP/1.1 200 OK\r\nServer: cihttpd\r\n\r\n" + f.read()
                 response = bytes(r, 'utf-8')
         except IOError:
             print("FILE NOT FOUND")
-             
+            
         return response
 
 
@@ -76,7 +102,6 @@ class ClientThread(threading.Thread):
         self.queue = queue
         self.client = clientNumber
         logging.info('New connection added.')
-
 
 
     def run(self):
@@ -95,6 +120,8 @@ class ClientThread(threading.Thread):
                     self.turn.wait() # wait
 
                 print("\n\n---\nClient:[",self.client,"]")
+                print("Client Queue:",self.queue.get_queue())
+
                 httpreq = HttpRequest(req)
                 # httpreq.display_request()
 

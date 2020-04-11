@@ -22,5 +22,6 @@ class QueueMachine:
     def exit_queue(self):
         self.queueLine.pop(0)
     
-
+    def get_queue(self):
+        return(self.queueLine)
   
