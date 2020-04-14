@@ -3,6 +3,10 @@ import json
 import queue
 import pathlib
 import os.path
+import time
+from datetime import datetime, date
+from time import gmtime, strftime
+
 
 
 # Comment out the line below to not print the INFO messages
@@ -15,7 +19,6 @@ class HttpRequest():
         self.rstr = requeststr
         self.rjson = {}
         self.parse_string()
-
 
     def parse_string(self):
         req = self.rstr.split("\r\n")
@@ -35,61 +38,76 @@ class HttpRequest():
             print("JSON:", self.rjson['body'])
 
         headers = {}
-        length = 0
         for line in req:
             start = ""
             for element in line:
                 if element == ':' and start != "":
-                    if (start == "Content-Length"):
-                        num = line[len(start)+2:len(line)]
-                        length = int(num)
-
                     end = line[len(start)+2:len(line)]
                     headers[start] = end
                     break
                 start += element
-        
-        headers["Content-Length"] = length
-        self.rjson['headers'] = headers
-        print("+++++++++++++++++\rHEADERS:", self.rjson['headers'],"\r+++++++++++++++++\r")
 
+        self.rjson['headers'] = headers
 
     def display_request(self):
         print("\n\nJSON: \n",self.rjson)
 
+    def form_parse(self):
+        body = self.rjson['body'].split('&')
+        name = body[0]
+        name = name.split('=')
+        name = name[1].replace('+',' ')
+        course = body[1]
+        course = course.split('=')
+        course = course[1].replace('+',' ')
+        return (name, course)
+
+    def get_time(self):
+        timestamp = strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
+        return timestamp
+
+    def post_default(self):
+        f = open("PROJ02/www/post_default.html")                    
+        r = f.read()
+        f.close()
+        return r
+
     def process_request(self):
         method = self.rjson["request-line"]["method"]
-        print("method:", method)
-        URI = "WWW" + self.rjson["request-line"]["URI"]
-        print("URI:", URI)
-
-        # TODO: ADD ONTO THIS : 
-            # HTTP/1.1 404 Not Found
-            # Date: Sun, 18 Oct 2012 10:36:20 GMT
-            # Server: Apache/2.2.14 (Win32)
-            # Content-Length: 230
-            # Content-Type: text/html; charset=iso-8859-1
-            # Connection: Closed
-
-            # && LINK : https://www.tutorialspoint.com/http/http_message_examples.htm
-
-
-
-        response = b"HTTP/1.1 404 File not found\r\nServer: cihttpd\r\n\r\n<html><body><h1>404 File not found</h1><p>\n\t\t-The Garbage Tier Server</p></body></html>"
-
-        if method == "POST":
-            print( "\r--------------\rLENGTH:", self.rjson, "\r--------------\r" )
-
-        try:
-            with open(URI, "r") as f:
-                # print(f.read()) 
-                r = "HTTP/1.1 200 OK\r\nServer: cihttpd\r\n\r\n" + f.read()
-                response = bytes(r, 'utf-8')
-        except IOError:
-            print("FILE NOT FOUND")
+        path = self.rjson["request-line"]["URI"]
+        URI = "PROJ02/www" + path
+        timestamp = self.get_time()
+        if os.path.exists(URI) :
+            file_stats = os.stat(URI)
             
-        return response
+            last_time_mod = strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime(file_stats.st_mtime))
 
+            content_length = str(file_stats.st_size)
+            msg = "HTTP/1.1 200 OK\r\nServer: cihttpd\r\nContent Length:"+content_length+"\r\nTimestamp: "+(timestamp)+"\r\nLast Modified: "+(last_time_mod)+"\r\n\r\n"
+        
+            if method == "HEAD":
+                response = bytes(msg, 'utf-8')
+            elif method == "GET":
+                if (URI == "PROJ02/www/"):
+                    URI = URI + "welcome.html"
+                a_body = open(URI)
+                response = bytes(msg + a_body.read(), 'utf-8')
+                a_body.close()
+            elif method == "POST":
+                if path == "/form.html":      
+                    name, course = self.form_parse()
+                    b_body = "<html><head><title>Fancy Town</title><link rel=\"stylesheet\" href=\"style.css\"></head><body><p><h1>INPUT:</h1><ul style=\"list-style-type:none;\"><li>NAME:"+name+"</li><li>COURSE:"+course+"</li></ul></p></body></html>"
+                    response = bytes(msg + b_body, 'utf-8')
+                else:
+                    c_body = self.post_default()
+                    response = bytes(msg + c_body, 'utf-8')
+
+        else:
+            if method == "HEAD":
+                response = bytes("HTTP/1.1 404 File not found\r\nServer: cihttpd\r\nTimestamp: "+(timestamp)+"\r\n\r\n", 'utf-8')
+            else:
+                response = bytes("HTTP/1.1 404 File not found\r\nServer: cihttpd\r\nTimestamp: "+(timestamp)+"\r\n\r\n<html><body><h1>404 File not found</h1><p>-The Garbage Tier Server</p></body></html>", 'utf-8')
+        return response
 
 
 
@@ -123,10 +141,8 @@ class ClientThread(threading.Thread):
                 print("Client Queue:",self.queue.get_queue())
 
                 httpreq = HttpRequest(req)
-                # httpreq.display_request()
-
-                # TODO: Process Request GET
-                # TODO: Process Request POST
+                # r = httpreq.process_request()
+                # print("\n\n\n",r,"\n\n\n")
                 self.csock.send(httpreq.process_request())
                 
                 logging.info('Disconnect client.')

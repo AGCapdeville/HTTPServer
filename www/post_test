@@ -1,14 +1,1 @@
-<html>
-
-<head>
-    <title>Fancy Town</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-
-<body>
-    <p>
-        <h1>POSTY!</h1>
-    </p>
-</body>
-
-</html>
+<html><head><title>Fancy Town</title><link rel="stylesheet" href="style.css"></head><body><p><h1>INPUT:</h1><ul style="list-style-type:none;"><li>NAME:Adam Capdeville</li><li>COURSE:123 cats</li></ul></p></body></html>
